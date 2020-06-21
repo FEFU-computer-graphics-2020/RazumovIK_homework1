@@ -38,6 +38,8 @@ namespace OpenTK
             var vRegex = new Regex(@"v ([-.\d]+) ([-.\d]+) ([-.\d]+)");
             var iRegex = new Regex(@"f (\d+)/(\d+)/(\d+) (\d+)/(\d+)/(\d+) (\d+)/(\d+)/(\d+)");
 
+            var rand = new Random();
+
             foreach (var line in lines)
             {
                 if (vRegex.IsMatch(line))
@@ -49,7 +51,7 @@ namespace OpenTK
                             float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture), 
                             float.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture),
                             float.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture)),
-                        new Vector3(1.0f, 0.0f, 0.0f));
+                        new Vector3((float)rand.NextDouble(), (float)rand.NextDouble(), (float)rand.NextDouble()));
 
                     vertices.Add(vertex);
                 }

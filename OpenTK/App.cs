@@ -70,6 +70,7 @@ namespace OpenTK
         protected override void OnLoad(EventArgs e)
         {
             GL.ClearColor(0.03f, 0.03f, 0.03f, 1.0f);
+            GL.Enable(EnableCap.DepthTest);
 
             shader = new Shader("shaders/shader.v", "shaders/shader.f");
 
@@ -106,32 +107,48 @@ namespace OpenTK
 
         private float scale = 1.0f;
         private float angle = 0.0f;
+        private float angle_z = 0.0f;
+        private float dist = 5.0f;
+        private bool persp = false;
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             shader.Use();
 
             controller.NewFrame(this);
 
             ImGui.SliderFloat("Scale", ref scale, 0, 10);
-            ImGui.SliderFloat("Angle", ref angle, 0, 3.14f * 2);
+            ImGui.SliderFloat("Angle", ref angle, -3.14f, 3.14f);
+            ImGui.SliderFloat("Angle_z", ref angle_z, -3.14f, 3.14f);
+            ImGui.SliderFloat("Distance", ref dist, 0, 10.0f);
+            ImGui.Checkbox("Perspective", ref persp);
 
             shader.SetUniform("scaleFactor", scale);
 
-            var model = Matrix4.CreateRotationY(angle);
+            var model = Matrix4.CreateRotationY(angle) * Matrix4.CreateRotationX(angle_z) * Matrix4.CreateTranslation(0, 0, -dist);
 
             shader.SetUniform("model", model);
+
+            //var projection = Matrix4.CreateOrthographic(10, 10, -2, 2);
+            //var projection = Matrix4.CreateOrthographicOffCenter(0, 1, 1, 0, -2, 2);
+            //var projection = Matrix4.CreatePerspectiveOffCenter(-500,1 , 1, -500, 0.1f, 100.0f);
+            var projection = persp
+                ? Matrix4.CreatePerspectiveFieldOfView((float) (Math.PI / 2), (float) Width / Height, 0.1f, 100.0f)
+                : Matrix4.CreateOrthographic(10, 10, -7, 7);
+           
+
+            shader.SetUniform("projection", projection);
 
             //scale += 0.001f;
 
             //GL.BindVertexArray(VertexArrayObject);
             //GL.PointSize(50);
             //GL.DrawArrays(PrimitiveType.Points, 0, 4);
-            
-            GL.DrawElements(PrimitiveType.Lines, mesh.Indeces.Length, DrawElementsType.UnsignedInt, 0);
+
+            GL.DrawElements(PrimitiveType.Triangles, mesh.Indeces.Length, DrawElementsType.UnsignedInt, 0);
 
             controller.Render();
 
